@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Rubiks Cube Configurator</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="webgl-container"></div>
+    <div id="gui-container"></div>    
+    <div id="gui-custom">
+        <div id="sub-gui-custom">
+            <div>
+                <h2>Rubik’s Cube Configurator</h2>
+            </div>
+            <h5>Configure your own Rubik's Cube!</h5>
+            <div>
+                <button type="button" class="collapsible">Cube Types</button>
+                <div class="content">
+                    <div class="gallery">
+                        <a target="_blank" onClick="load3x3Cube(); return false;" href="">
+                            <img src="img/3x3_cube.JPG" alt="3x3_cube" width="100" height="100">
+                        </a>
+                        <div class="desc">3x3 Cube (Default)</div>
+                    </div>
+                    <div class="gallery">
+                        <a target="_blank" onClick="load2x2Cube(); return false;" href="">
+                            <img src="img/2x2_cube.JPG" alt="3x3_cube" width="100" height="100">
+                        </a>
+                        <div class="desc">2x2 Cube (Noobs)</div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div>
+                <button type="button" class="collapsible">Color Templates</button>
+                <div class="content">
+                    <div class="gallery">
+                        <div class="desc" onClick="loadClassicColors(); return false;">Classic</div>
+                    </div>
+                    <div class="gallery">
+                        <div class="desc" onClick="loadBrightColors(); return false;">Bright</div>
+                    </div>
+                    <div class="gallery">
+                        <div class="desc" onClick="loadRetroColors(); return false;">Retro</div>
+                    </div>
+                    <div class="gallery">
+                        <div class="desc" onClick="loadAquaColors(); return false;">Aqua</div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div>
+                <button type="button" class="collapsible action" onclick="onRotateCubeClick()">Rotate Cube</button>
+            </div>
+        </div>
+    </div>    
+
+    <script type="text/javascript" src="js/three.js"></script>
+    <script type="text/javascript" src="js/OrbitControls.js"></script>
+    <script type="text/javascript" src="js/ColladaLoader.js"></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
+    <script type="text/javascript">
+        //Configurator
+        var coll = document.getElementsByClassName("collapsible");
+        var i;
+
+        for (i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.display === "block") {
+                    content.style.display = "none";
+                } else {
+                    var contList = document.getElementsByClassName('content');
+                    for (var i = 0; i < contList.length; ++i) {
+                        if (this !== contList[i] && contList[i].style.display === "block") {
+                            contList[i].style.display = "none";
+                            contList[i].previousElementSibling.classList.toggle("active");
+                        }
+                    }
+                    content.style.display = "block";
+                }
+            });
+        }
+
+        function load3x3Cube() {
+            loader.load('assets/rcube_3x3.dae', function (collada) {
+                group.visible = false;
+                scene.remove(group);
+
+                let dae = collada.scene;
+                group = new THREE.Group();
+
+                dae.children.forEach(element => {
+                    let daeMesh = element.children[0];
+                    let mesh = new THREE.Mesh(daeMesh.geometry, meshMaterial);
+                    group.add(mesh);  
+                });
+
+
+
+                group.position.set(0, 0, 0); //x,z,y- if you think in blender dimensions ;)
+                group.rotation.set(0, 1, 0);
+                group.rotation.y = -0.5 * Math.PI;
+                group.scale.set(2, 2, 2);
+                group.visible = true;
+                scene.add(group);
+                render();
+            });
+        }
+
+        function load2x2Cube() {
+            loader.load('assets/rcube_2x2.dae', function (collada) {   
+                group.visible = false;
+                scene.remove(group);
+
+                let dae = collada.scene;
+                group = new THREE.Group();
+
+                for (i = 0; i < dae.children.length; i++) {
+                    let daeMesh = dae.children[i].children[0];
+                    let mesh = new THREE.Mesh(daeMesh.geometry, meshMaterial);
+                    if (i == dae.children.length-1) {
+                        mesh.position.set(3.5, 3.1, -2.4);
+                    }
+                    group.add(mesh);
+                }
+                dae.children.forEach(element => {
+
+                });
+
+                group.position.set(-3, -3, -3); //x,z,y- if you think in blender dimensions ;)
+                group.rotation.set(0, 0, 0);
+                group.rotation.y = -0.5 * Math.PI;
+                group.scale.set(2, 2, 2);
+                group.visible = true;
+                scene.add(group);
+                render();
+            });
+        }
+
+        function loadClassicColors() {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].color = classicColors[i].color;
+            }
+            render();
+        }
+
+        function loadBrightColors() {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].color = brightColors[i].color;
+            }
+            render();
+        }
+
+        function loadRetroColors() {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].color = retroColors[i].color;
+            }
+            render();
+        }
+
+        function loadAquaColors() {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].color = aquaColors[i].color;
+            }
+            render();
+        }        
+
+        function onRotateCubeClick() {
+            guiControls.animated = !guiControls.animated;
+            if (guiControls.animated) animate();
+        }
+
+        function openNav() {
+            document.getElementById("mySidenav").style.width = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+        }
+
+        //ThreeJS
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 1000);
+        var renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor(0x444444, 1.0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        var webglContainer = document.getElementById('webgl-container');
+        webglContainer.appendChild(renderer.domElement);
+
+         // camera controls
+        var camControls = new THREE.OrbitControls(camera, renderer.domElement);
+        camControls.damping = 0.2;
+        camControls.addEventListener('change', render);
+
+         // window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        var axes = new THREE.AxisHelper(20);
+        var grid = new THREE.GridHelper(80, 80);
+        var planeGeometry = new THREE.PlaneGeometry(80, 80, 10, 10);
+        var planeMaterial = new THREE.MeshLambertMaterial({
+            color: 0x888888
+        });
+
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -7.00;
+        plane.position.z = 0;
+   
+        var meshMaterial = [
+            new THREE.MeshLambertMaterial( { color: 0x000000 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFFFFFF } ),
+            new THREE.MeshLambertMaterial( { color: 0x0000FF } ),
+            new THREE.MeshLambertMaterial( { color: 0xFF8000 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFF0000 } ),
+            new THREE.MeshLambertMaterial( { color: 0x00FF00 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFFFF00 } )
+        ];
+
+        var classicColors = [
+            new THREE.MeshLambertMaterial( { color: 0x000000 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFFFFFF } ),
+            new THREE.MeshLambertMaterial( { color: 0x0000FF } ),
+            new THREE.MeshLambertMaterial( { color: 0xFF8000 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFF0000 } ),
+            new THREE.MeshLambertMaterial( { color: 0x00FF00 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFFFF00 } )
+        ];
+
+        var brightColors = [
+            new THREE.MeshLambertMaterial( { color: 0xFFFFFF } ),
+            new THREE.MeshLambertMaterial( { color: 0xFFEE81  } ),
+            new THREE.MeshLambertMaterial( { color: 0xFBF8E6 } ),
+            new THREE.MeshLambertMaterial( { color: 0x068FFC } ),
+            new THREE.MeshLambertMaterial( { color: 0xFEDA00 } ),
+            new THREE.MeshLambertMaterial( { color: 0x68C2FF } ),
+            new THREE.MeshLambertMaterial( { color: 0x74F2C6 } )
+        ];
+
+        var retroColors = [
+            new THREE.MeshLambertMaterial( { color: 0x000000 } ),
+            new THREE.MeshLambertMaterial( { color: 0x270245  } ),
+            new THREE.MeshLambertMaterial( { color: 0x871A85 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFF2941 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFEFF38 } ),
+            new THREE.MeshLambertMaterial( { color: 0xFE18D3 } ),
+            new THREE.MeshLambertMaterial( { color: 0x4206F1 } )
+        ];
+
+        var aquaColors = [
+            new THREE.MeshLambertMaterial( { color: 0xFFFFFF } ),
+            new THREE.MeshLambertMaterial( { color: 0xFFFFFF  } ),
+            new THREE.MeshLambertMaterial( { color: 0x1FFCFE } ),
+            new THREE.MeshLambertMaterial( { color: 0x1887FA } ),
+            new THREE.MeshLambertMaterial( { color: 0x0033B9 } ),
+            new THREE.MeshLambertMaterial( { color: 0x47A5CB } ),
+            new THREE.MeshLambertMaterial( { color: 0x262626 } )
+        ];
+
+         // ---- 3D CONTENT CREATION -----------------------------------------------------
+        var group = new THREE.Group();
+        var loader = new THREE.ColladaLoader();
+        loader.options.convertUpAxis = true;
+        load3x3Cube();
+
+        // ---- END OF 3D CONTENT CREATION ---------------------------------------------
+
+        // position and point the camera to the center of the scene
+        camera.position.x = -35;
+        camera.position.y = 30;2
+        camera.position.z = 50;
+        camera.lookAt(scene.position);
+
+        // add subtle ambient lighting
+        var ambiColor = "#FFFFFF";
+        var ambientLight = new THREE.AmbientLight(ambiColor, 0.4);
+        scene.add(ambientLight);
+
+        // add headlight
+        var headColor = "#FFFFFF";
+        var headLight = new THREE.PointLight (headColor, 0.33);
+        headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+        scene.add(headLight);
+
+        // add spotlight
+        var spotColor = "#FFFFFF";
+        var spotLight = new THREE.SpotLight(spotColor);
+        spotLight.penumbra = 0.572;
+        spotLight.position.set(-40, 60, -10);
+        spotLight.shadow.camera.near = 2;
+        spotLight.shadow.camera.far = 200;
+        spotLight.shadow.camera.fov = 130;
+        spotLight.target = plane;
+        spotLight.distance = 0;
+        scene.add(spotLight);
+
+        // add GUI control elements
+        var guiControls = new function () {
+            //general
+            this.showAxes = false;
+            this.showGrid = false;
+            this.showPlane = false;
+            this.asWireframes = false;
+            this.withShadow = false;
+            this.withFog = false;
+            //animation
+            this.animated = false;
+            this.rotationSpeed = 0.03;
+            //light
+            this.withAmbient = true;
+            this.withSpotLight = true;
+            this.withHeadLight = true;
+            this.ambientColor = ambiColor;
+            this.headColor = headColor;
+            this.spotColor = spotColor;
+            this.intensity = 2;
+            this.distance = 100;
+            this.exponent = 0.1;
+            this.angle = 3.5;
+            //material
+            this.opacity = meshMaterial[0].opacity;
+            this.transparent = meshMaterial[0].transparent;
+            this.visible = meshMaterial[0].visible;
+            this.side = "front";
+            this.color = meshMaterial[0].color.getStyle();
+            this.emissive = meshMaterial[0].emissive.getHex();
+        }
+
+        var gui = new dat.GUI();
+        var guiContainer = document.getElementById('gui-container');
+        guiContainer.appendChild(gui.domElement);
+
+        var guiGen = gui.addFolder("General"); 
+        guiGen.add(guiControls, 'showAxes').onChange(function (e) {
+            showAxes = e;
+            if (showAxes) {
+                scene.add(axes);
+            } else {
+                scene.remove(axes);
+            }
+            render();
+        });
+        guiGen.add(guiControls, 'showGrid').onChange(function (e) {
+            showGrid = e;
+            if (showGrid) {
+                scene.add(grid);
+            } else {
+                scene.remove(grid);
+            }
+            render();
+        });
+        guiGen.add(guiControls, 'showPlane').onChange(function (e) {
+            showPlane = e;
+            if (showPlane) {
+                scene.add(plane);
+            } else {
+                scene.remove(plane);
+            }
+            render();
+        });
+
+        var guiAni = gui.addFolder("Animation"); 
+        guiAni.add(guiControls, 'animated').onChange(function (e) {
+            animated = e;
+            if (animated) animate();
+        });
+        guiAni.add(guiControls, 'rotationSpeed', 0, 0.25);
+
+        guiLights = gui.addFolder('Lights');
+        guiLights.add(guiControls, 'withAmbient').onChange(function (e) {
+            withAmbient = e;
+            if (withAmbient) {
+                scene.add(ambientLight);
+            } else {
+                scene.remove(ambientLight);
+            }
+            render();
+        });
+        guiLights.addColor(guiControls, 'ambientColor').onChange(function (e) {
+            ambientLight.color = new THREE.Color(e);
+            render();
+        });
+        guiLights.add(guiControls, 'withHeadLight').onChange(function (e) {
+            withHeadLight = e;
+            if (withHeadLight) {
+                scene.add(headLight);
+            } else {
+                scene.remove(headLight);
+            }
+            render();
+        });
+        guiLights.addColor(guiControls, 'headColor').onChange(function (e) {
+            headLight.color = new THREE.Color(e);
+            render();
+        });
+        guiLights.addColor(guiControls, 'spotColor').onChange(function (e) {
+            spotLight.color = new THREE.Color(e);
+            render();
+        });
+        guiLights.add(guiControls, 'angle', 0, Math.PI * 2).onChange(function (e) {
+            spotLight.angle = e;
+            render();
+        });
+        guiLights.add(guiControls, 'intensity', 0, 5).onChange(function (e) {
+            spotLight.intensity = e;
+        });
+        guiLights.add(guiControls, 'distance', 0, 200).onChange(function (e) {
+            spotLight.distance = e;
+            render();
+        });
+        guiLights.add(guiControls, 'exponent', 0, 100).onChange(function (e) {
+            spotLight.exponent = e;
+            render();
+        });
+
+        var guiMat = gui.addFolder("Material");
+        guiMat.addColor(guiControls, 'color').onChange(function (e) {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].color.setStyle(e);
+            }
+            render();
+        });
+        guiMat.addColor(guiControls, 'emissive').onChange(function (e) {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].emissive = new THREE.Color(e);
+            }
+            render();
+        });
+        guiMat.add(guiControls, 'side', ["front", "back", "double" ]).onChange(function (e) {
+            switch (e) {
+                case "front":
+                    meshMaterial[0].side = THREE.FrontSide;
+                    break;
+                case "back":
+                    meshMaterial[0].side = THREE.BackSide;
+                    break;
+                case "double":
+                    meshMaterial[0].side = THREE.DoubleSide
+                    break;
+            }
+            meshMaterial[0].needsUpdate = true;;
+            render();
+        });
+        guiMat.add(guiControls, 'transparent').onChange(function (e) {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].transparent = e;
+            }
+            render();
+        });
+        guiMat.add(guiControls, 'opacity', 0, 1).onChange(function (e) {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].opacity = e;
+            }
+            render();
+        });
+        guiMat.add(guiControls, 'visible').onChange(function (e) {
+            for (i = 0; i < meshMaterial.length; i++) {
+                meshMaterial[i].visible = e;
+            }
+            render();
+        });
+        gui.close();
+
+         // init and call render function
+        function render() {
+            headLight.position.set(camera.position.x, camera.position.y, camera.position.z);
+            renderer.render(scene, camera);
+        }
+        
+        initShadow(true);
+        initFog(true);
+        render();
+        setShadow(false);
+        setFog(false);
+
+        // animate the 3D objects
+        var invert = 1;
+        var phase = 0;
+
+        function animate() {
+            if (guiControls.animated) {
+                // rotate the cube around its axes
+                group.rotation.x += guiControls.rotationSpeed;
+                group.rotation.y += guiControls.rotationSpeed / 2;
+                group.rotation.z += guiControls.rotationSpeed / 3;
+            }
+
+            if (guiControls.animated) {
+                // request re-rendering
+                requestAnimationFrame(animate);
+            }
+            render();
+        }
+
+         // shadow cast on plane
+        function initShadow(value) {
+            // SET receiveShadow AND castShadow FLAGS OF 3D ELEMENTS WITH SHADOW
+            plane.receiveShadow = value;
+            group.castShadow = value;
+            spotLight.castShadow = value;
+            spotLight.shadow.mapSize.width = 2048;
+            spotLight.shadow.mapSize.height = 2048;
+            renderer.shadowMap.enabled = value;
+            if (value) {
+                guiGen.add(guiControls, 'withShadow').onChange(function (e) {
+                    withShadow = e;
+                    setShadow(withShadow);
+                });
+            }
+        }
+
+        function setShadow(value) {
+            if (value) {
+                renderer.shadowMap.autoUpdate = true;
+            } else {
+                renderer.shadowMap.autoUpdate = false;
+                renderer.clearTarget(spotLight.shadow.map);
+            }
+            render();
+        }
+
+         // fog
+        var fog;
+
+        function initFog(value) {
+            if (value) {
+                fog = new THREE.Fog(0xeeeeee, 0.0000001, 150);
+                scene.fog = fog;
+                guiGen.add(guiControls, 'withFog').onChange(function (e) {
+                    withFog = e;
+                    setFog(withFog);
+                });
+            }
+        }
+
+        function setFog(value) {
+            if (!fog) return;
+            if (value) {
+                fog.near = 0.000000001;
+                fog.far = 150;
+            } else {
+                fog.near = 8000;
+                fog.far = 8000;
+            }
+            render();
+        }
+    </script>
+</body>
+
+</html>

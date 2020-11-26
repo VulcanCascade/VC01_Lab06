@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: "Lato", sans-serif;
+  }
+
+  #gui-container {
+    position:absolute;
+    z-index:1;
+    top:0;
+    left:0;
+  }
+
+  #gui-custom {
+    position:absolute;
+    z-index:2;
+    top:0;
+    right:0;
+    background-color:black;
+    color: #eee;
+    width:250px;
+  }
+
+  #sub-gui-custom {
+    margin:15px;
+  }
+
+  h2 {
+      text-align: center;
+  }
+  
+  div.gallery {
+    background-color: #eee;
+    margin: 0px;
+    border: 1px solid #000000;
+    float: left;
+    width: 100%;
+  }
+  
+  div.gallery:hover {
+    border: 1px solid #777;
+  }
+  
+  div.gallery img {
+    width: 100%;
+    height: auto;
+  }
+  
+  div.desc {
+    padding: 15px;
+    text-align: center;
+  }
+
+  .collapsible {
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: center;
+    outline: none;
+    font-size: 15px;
+    font-weight: bold;
+  }
+  
+  /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+  .active, .collapsible:hover {
+    background-color: #ccc;
+  }
+
+.active.action {
+    background-color: rgb(65, 163, 62);
+}
+  
+  /* Style the collapsible content. Note: hidden by default */
+  .content {
+    padding-right: 2px;
+    margin: 0;
+    display: none;
+    overflow: hidden;
+    color: #444;
+  }

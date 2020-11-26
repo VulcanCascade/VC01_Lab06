@@ -1,0 +1,1 @@
+<?php include_once("rubikscube_configurator_lab06.html”); ?>
