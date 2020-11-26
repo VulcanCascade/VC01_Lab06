@@ -1,1 +1,1 @@
-<?php include_once("rubikscube_configurator_lab06.html”); ?>
+<?php include_once("index.html”); ?>
